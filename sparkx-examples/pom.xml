@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.dxy.data</groupId>
         <artifactId>sparkx</artifactId>
-        <version>1.0</version>
+        <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.dxy.data</groupId>
             <artifactId>sparkx-monitor</artifactId>
-            <version>1.0</version>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
