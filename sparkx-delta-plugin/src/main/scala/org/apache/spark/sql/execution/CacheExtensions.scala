@@ -12,7 +12,7 @@ import org.apache.spark.sql.execution.ZIndexCacheExtensions.ExtensionsBuilder
 class CacheExtensions extends ExtensionsBuilder with Logging {
   override def apply(sessionExtensions: SparkSessionExtensions): Unit = {
     logInfo("register extension CacheExtensions.")
-    sessionExtensions.injectResolutionRule(s => ReplaceHiveRelation(s))
+    sessionExtensions.injectResolutionRule(s => ReplaceToDeltaRelation(s))
   }
 }
 
