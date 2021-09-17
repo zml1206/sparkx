@@ -53,7 +53,7 @@ case class ReplaceToDeltaRelation(sparkSession: SparkSession) extends Rule[Logic
           }
         case htr: HiveTableRelation =>
           val cacheKey = CubeSharedState.cubeCatalog.cacheKey(
-            SourceType.JDBC,
+            SourceType.Hive,
             htr.tableMeta.identifier.database.get,
             htr.tableMeta.identifier.table)
           val cacheTableInfo = CubeSharedState.cubeCatalog.cacheInfos.get(cacheKey)
