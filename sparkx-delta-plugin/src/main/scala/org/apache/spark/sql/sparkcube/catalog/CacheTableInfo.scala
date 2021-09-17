@@ -10,4 +10,5 @@ case class CacheTableInfo(sourceType: String,
                           partitionColumn: String = "",
                           numPartitions: Int = 1,
                           lowerBound: String = "",
-                          upperBound: String = "")
+                          upperBound: String = "",
+                          isView: Boolean = false)
