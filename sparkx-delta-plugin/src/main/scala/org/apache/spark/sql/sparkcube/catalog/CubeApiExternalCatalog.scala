@@ -12,14 +12,18 @@ class CubeApiExternalCatalog extends CubeExternalCatalog {
 
   override def getCacheInfos(): Map[String, CacheTableInfo] = {
 
+    var cache = Map[String, CacheTableInfo]()
     val paramsMap = PKUtil.getParams(PK, SparkFiles.get("." + PK), APP_ID, null, null)
-
     val httpResult = HttpClientUtil.doGet(URL, paramsMap, HttpConstants.DEFAULT)
-    if (httpResult.getCode != 200) {
-      throw new RuntimeException(s"获取 spark cube 元数据失败：${JacksonUtil.toJson(httpResult)}")
+    try {
+      val dxyHttpBody = JacksonUtil.fromJson(httpResult.getBody, classOf[DxyHttpBody])
+      cache = dxyHttpBody.results.map(cti => (cacheKey(cti.sourceType, cti.db, cti.table), cti)).toMap
+    } catch {
+      case e: Exception =>
+        logError(s"获取 spark cube 元数据失败：${JacksonUtil.toJson(httpResult)}")
+        logError(e.getMessage)
     }
-    val dxyHttpBody = JacksonUtil.fromJson(httpResult.getBody, classOf[DxyHttpBody])
-    dxyHttpBody.results.map(cti => (cacheKey(cti.sourceType, cti.db, cti.table), cti)).toMap
+    cache
   }
 
 }
