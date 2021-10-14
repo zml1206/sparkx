@@ -13,6 +13,7 @@ class CacheExtensions extends ExtensionsBuilder with Logging {
   override def apply(sessionExtensions: SparkSessionExtensions): Unit = {
     logInfo("register extension CacheExtensions.")
     sessionExtensions.injectResolutionRule(s => ReplaceToDeltaRelation(s))
+    sessionExtensions.injectResolutionRule(s => HiveRefreshRelation(s))
   }
 }
 
