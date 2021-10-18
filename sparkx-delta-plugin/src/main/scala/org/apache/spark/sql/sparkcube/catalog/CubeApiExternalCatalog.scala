@@ -16,7 +16,7 @@ class CubeApiExternalCatalog extends CubeExternalCatalog {
     val paramsMap = PKUtil.getParams(PK, SparkFiles.get("." + PK), APP_ID, null, null)
     val httpResult = HttpClientUtil.doGet(URL, paramsMap, HttpConstants.DEFAULT)
     try {
-      val dxyHttpBody = JacksonUtil.fromJson(httpResult.getBody, classOf[DxyHttpBody])
+      val dxyHttpBody = JacksonUtil.fromJson[DxyHttpBody](httpResult.getBody)
       cache = dxyHttpBody.results.map(cti => (cacheKey(cti.sourceType, cti.db, cti.table), cti)).toMap
     } catch {
       case e: Exception =>
