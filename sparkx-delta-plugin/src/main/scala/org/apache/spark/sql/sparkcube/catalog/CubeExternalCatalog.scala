@@ -1,7 +1,7 @@
 package org.apache.spark.sql.sparkcube.catalog
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
+import org.apache.spark.sql.catalyst.catalog.{CatalogTable, HiveTableRelation}
 import org.apache.spark.sql.execution.datasources.jdbc.JDBCOptions
 
 /**
@@ -26,11 +26,11 @@ abstract class CubeExternalCatalog extends Logging {
     cacheKey(sourceType.toString, db, table)
   }
 
-  def cacheHiveKey(htr: HiveTableRelation): String = {
+  def cacheHiveKey(tableMeta: CatalogTable): String = {
     cacheKey(
       SourceType.Hive,
-      htr.tableMeta.identifier.database.get,
-      htr.tableMeta.identifier.table)
+      tableMeta.identifier.database.get,
+      tableMeta.identifier.table)
   }
 
   def getJdbcDb(url: String): String = {
