@@ -25,6 +25,14 @@ object CubeConf {
       .booleanConf
       .createWithDefault(false)
 
+  val D_USING_HIVE_PARTITION_CHECK =
+    buildStaticConf("spark.d.check.hive.partition")
+      .internal()
+      .doc("")
+      .version("3.0.0")
+      .booleanConf
+      .createWithDefault(false)
+
   val CUBE_CATALOG_IMPLEMENTATION = buildStaticConf("spark.sql.cube.catalogImplementation")
     .internal()
     .stringConf

@@ -40,7 +40,7 @@ case class ReplaceToDeltaRelation(sparkSession: SparkSession) extends Rule[Logic
         } else {
           lr
         }
-      case htr @ HiveTableRelation(HiveMatch(cacheInfo), _, _, _, _) if cacheInfo.deltaPath.nonEmpty =>
+      case htr @ HiveTableRelation(HiveMatch(cacheInfo), _, _, _, _) if Option(cacheInfo.deltaPath).nonEmpty =>
         val relation = DeltaTableV2(SparkSession.active, new Path(cacheInfo.deltaPath)).toBaseRelation
         LogicalRelation(relation, htr.output, None, htr.isStreaming)
     }
