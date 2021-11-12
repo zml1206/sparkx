@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.delta.catalog.DeltaTableV2
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 import org.apache.spark.sql.execution.datasources.jdbc.{JDBCRelation, JdbcRelationProvider}
-import org.apache.spark.sql.sparkcube.CubeSharedState
+import org.apache.spark.sql.sparkcube.catalog.{CacheTableInfo, HiveMatch, JdbcMatch}
 import org.apache.spark.sql.sparkcube.conf.CubeConf
 
 /**
@@ -17,45 +17,40 @@ import org.apache.spark.sql.sparkcube.conf.CubeConf
  */
 case class ReplaceToDeltaRelation(sparkSession: SparkSession) extends Rule[LogicalPlan] {
 
-  private def usingDeltaTable(): Boolean = {
-    sparkSession.sessionState.conf.getConf(CubeConf.D_USING_DELTA_TABLE)
+  override def apply(plan: LogicalPlan): LogicalPlan = {
+    if (sparkSession.sessionState.conf.getConf(CubeConf.D_USING_DELTA_TABLE)) genPlan(plan) else plan
   }
 
-  override def apply(plan: LogicalPlan): LogicalPlan = {
+  def genPlan(plan: LogicalPlan): LogicalPlan =
     plan resolveOperators {
-      case lr@LogicalRelation(jr@JDBCRelation(_, _, jdbcOptions), output, catalogTable, isStreaming)
-        if usingDeltaTable =>
-        val cacheKey = CubeSharedState.cubeCatalog.cacheJDBCKey(jdbcOptions)
-        val cacheTableInfoOption = CubeSharedState.cubeCatalog.cacheInfos.get(cacheKey)
-        if (cacheTableInfoOption.nonEmpty) {
-          val cacheInfo = cacheTableInfoOption.get
-          if (Option(cacheInfo.deltaPath).nonEmpty) {
-            val relation = DeltaTableV2(SparkSession.active, new Path(cacheInfo.deltaPath)).toBaseRelation
-            return LogicalRelation(relation, output, None, isStreaming)
-          } else if (jr.jdbcOptions.numPartitions.isEmpty
-            && cacheInfo.numPartitions > 1
-            && !StringUtils.isAnyBlank(cacheInfo.partitionColumn, cacheInfo.lowerBound, cacheInfo.upperBound)) {
-            val parameters = jr.jdbcOptions.parameters
-              .++(Map(
-                "numPartitions" -> cacheInfo.numPartitions.toString,
-                "partitionColumn" -> cacheInfo.partitionColumn,
-                "lowerBound" -> cacheInfo.lowerBound,
-                "upperBound" -> cacheInfo.upperBound
-              ))
-            val baseRelation = new JdbcRelationProvider().createRelation(jr.sqlContext, parameters)
-            return LogicalRelation(baseRelation, output, catalogTable, isStreaming)
-          }
-        }
-        lr
-      case htr: HiveTableRelation if usingDeltaTable =>
-        val cacheKey = CubeSharedState.cubeCatalog.cacheHiveKey(htr)
-        val cacheTableInfo = CubeSharedState.cubeCatalog.cacheInfos.get(cacheKey)
-        if (cacheTableInfo.nonEmpty && Option(cacheTableInfo.get.deltaPath).nonEmpty) {
-          val relation = DeltaTableV2(SparkSession.active, new Path(cacheTableInfo.get.deltaPath)).toBaseRelation
-          LogicalRelation(relation, htr.output, None, htr.isStreaming)
+      case lr @ LogicalRelation(jr@JDBCRelation(_, _, jo @ JdbcMatch(cacheInfo)), output, catalogTable, isStreaming) =>
+        if (Option(cacheInfo.deltaPath).nonEmpty) {
+          val relation = DeltaTableV2(SparkSession.active, new Path(cacheInfo.deltaPath)).toBaseRelation
+          return LogicalRelation(relation, output, None, isStreaming)
+        } else if (jo.numPartitions.isEmpty && jdbcIsPartition(cacheInfo)) {
+          val parameters = jo.parameters
+            .++(Map(
+              "numPartitions" -> cacheInfo.numPartitions.toString,
+              "partitionColumn" -> cacheInfo.partitionColumn,
+              "lowerBound" -> cacheInfo.lowerBound,
+              "upperBound" -> cacheInfo.upperBound
+            ))
+          val baseRelation = new JdbcRelationProvider().createRelation(jr.sqlContext, parameters)
+          return LogicalRelation(baseRelation, output, catalogTable, isStreaming)
         } else {
-          htr
+          lr
         }
+      case htr @ HiveTableRelation(HiveMatch(cacheInfo), _, _, _, _) if Option(cacheInfo.deltaPath).nonEmpty =>
+        val relation = DeltaTableV2(SparkSession.active, new Path(cacheInfo.deltaPath)).toBaseRelation
+        LogicalRelation(relation, htr.output, None, htr.isStreaming)
+    }
+
+  def jdbcIsPartition(cacheInfo: CacheTableInfo): Boolean = {
+    if (cacheInfo.numPartitions > 1
+      && !StringUtils.isAnyBlank(cacheInfo.partitionColumn, cacheInfo.lowerBound, cacheInfo.upperBound)) {
+      true
+    } else {
+      false
     }
   }
 

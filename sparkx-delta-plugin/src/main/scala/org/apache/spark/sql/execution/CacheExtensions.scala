@@ -14,6 +14,7 @@ class CacheExtensions extends ExtensionsBuilder with Logging {
     logInfo("register extension CacheExtensions.")
     sessionExtensions.injectResolutionRule(s => ReplaceToDeltaRelation(s))
     sessionExtensions.injectResolutionRule(s => HiveRefreshRelation(s))
+    sessionExtensions.injectOptimizerRule(s => HivePartitionFilterCheckRelation(s))
   }
 }
 

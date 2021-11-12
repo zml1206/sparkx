@@ -4,7 +4,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.rules.Rule
-import org.apache.spark.sql.sparkcube.CubeSharedState
+import org.apache.spark.sql.sparkcube.catalog.HiveMatch
 import org.apache.spark.sql.sparkcube.conf.CubeConf
 
 /**
@@ -12,21 +12,17 @@ import org.apache.spark.sql.sparkcube.conf.CubeConf
  */
 case class HiveRefreshRelation(sparkSession: SparkSession) extends Rule[LogicalPlan] {
 
-  private def usingRefresh(): Boolean = {
-    sparkSession.sessionState.conf.getConf(CubeConf.D_USING_HIVE_REFRESH)
+  override def apply(plan: LogicalPlan): LogicalPlan = {
+    if (sparkSession.sessionState.conf.getConf(CubeConf.D_USING_HIVE_REFRESH)) genPlan(plan) else plan
   }
 
-  override def apply(plan: LogicalPlan): LogicalPlan = {
+  def genPlan(plan: LogicalPlan): LogicalPlan = {
     plan resolveOperators {
-      case htr: HiveTableRelation if usingRefresh =>
-        val cacheKey = CubeSharedState.cubeCatalog.cacheHiveKey(htr)
-        val cacheTableInfo = CubeSharedState.cubeCatalog.cacheInfos.get(cacheKey)
-        if (cacheTableInfo.nonEmpty
-          && Option(cacheTableInfo.get.format).nonEmpty
-          && Array("parquet", "orc").contains(cacheTableInfo.get.format)) {
-          sparkSession.sessionState.catalog.refreshTable(htr.tableMeta.identifier)
-        }
-        htr
+      case hr @ HiveTableRelation(tableMeta @ HiveMatch(cacheInfo), _, _, _, _)
+        if Option(cacheInfo.format).nonEmpty
+          && Array("parquet", "orc").contains(cacheInfo.format) =>
+        sparkSession.sessionState.catalog.refreshTable(tableMeta.identifier)
+        hr
     }
   }
 }
