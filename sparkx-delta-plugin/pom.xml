@@ -26,11 +26,6 @@
             <artifactId>delta-core_${scala.binary.version}</artifactId>
             <version>Ddelta-0.8.24-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.dxy.data</groupId>
-            <artifactId>module-http</artifactId>
-            <version>1.5-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
 </project>

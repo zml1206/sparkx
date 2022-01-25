@@ -200,37 +200,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <distributionManagement>
-        <repository>
-            <id>nexus-releases</id>
-            <name>Nexus Release Repository</name>
-            <url>https://nexus.k8s.qc.host.dxy/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>https://nexus.k8s.qc.host.dxy/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 
-    <repositories>
-        <repository>
-            <id>nexus</id>
-            <name>dxy private repository</name>
-            <url>http://nexus.k8s.qc.host.dxy/repository/maven-public/</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </releases>
-            <layout>default</layout>
-        </repository>
-    </repositories>
     <pluginRepositories>
         <pluginRepository>
             <id>aliyun</id>
@@ -247,8 +217,5 @@
 
   <modules>
       <module>sparkx-delta-plugin</module>
-      <!--<module>sparkx-monitor</module>
-      <module>sparkx-examples</module>
-      <module>assembly</module>-->
   </modules>
 </project>
