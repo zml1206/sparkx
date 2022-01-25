@@ -30,7 +30,7 @@ class CubeApiExternalCatalog extends CubeExternalCatalog {
 
 object CubeApiExternalCatalog {
   val PK = "mlsql-skone"
-  val URL = "https://odep-api.uc.host.dxy/api/v2/materialized/view"
+  val URL = "https://odep-api.k8s.qc.host.dxy/api/v2/materialized/view"
   val APP_ID = "app_mlsql_init"
 }
 
